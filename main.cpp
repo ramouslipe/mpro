@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <map>
+#include <functional>
 
 class MonitorDao {
 public:
@@ -41,6 +43,17 @@ class SolicitacaoReabastecimentoDao {
 public:
     void registraSolicitacaoReabastecimento(const std::string& maquina) {
         std::cout << "SolicitacaoReabastecimentoDao: Solicitação de reabastecimento registrada para " << maquina << "." << std::endl;
+    }
+};
+
+class RelatorioPlantioDao {
+public:
+    void acessaModulo() {
+        std::cout << "RelatorioPlantioDao: Módulo de relatórios de plantio acessado." << std::endl;
+        std::cout << "Digite o período do relatório (ex: 01/2025 a 12/2025): ";
+        std::string periodo;
+        std::getline(std::cin, periodo);
+        std::cout << "Relatório gerado para o período: " << periodo << std::endl;
     }
 };
 
@@ -109,30 +122,62 @@ public:
     }
 };
 
+class RelatorioPlantioManager {
+private:
+    RelatorioPlantioDao relatorioPlantioDao;
+
+public:
+    void acessaModulo() {
+        std::cout << "RelatorioPlantioManager: Acessando módulo de relatórios de plantio..." << std::endl;
+        relatorioPlantioDao.acessaModulo();
+    }
+};
+
 int main() {
     MonitorManager monitorManager;
     CategoriaAduboManager categoriaAduboManager;
     NivelSementesManager nivelSementesManager;
     VazaoSementesManager vazaoSementesManager;
     SolicitacaoReabastecimentoManager solicitacaoReabastecimentoManager;
+    RelatorioPlantioManager relatorioPlantioManager;
 
-    std::cout << "Testando operações do mPro:" << std::endl;
+    std::map<std::string, std::function<void()>> comandos = {
+        {"solicitaStatus", [&]() { monitorManager.solicitaStatus(); }},
+        {"registraObservacao", [&]() {
+            std::string observacao;
+            std::cout << "Digite a observação: ";
+            std::getline(std::cin, observacao);
+            monitorManager.registraObservacao(observacao);
+        }},
+        {"retornaPainelMonitoramento", [&]() { monitorManager.retornaPainelMonitoramento(); }},
+        {"acessaModuloCategoriasAdubo", [&]() { categoriaAduboManager.acessaModulo(); }},
+        {"acessaModuloNivelSementes", [&]() { nivelSementesManager.acessaModulo(); }},
+        {"registraSolicitacaoReabastecimento", [&]() {
+            std::string maquina;
+            std::cout << "Digite o nome da máquina: ";
+            std::getline(std::cin, maquina);
+            solicitacaoReabastecimentoManager.registraSolicitacaoReabastecimento(maquina);
+        }},
+        {"acessaModuloVazaoSementes", [&]() { vazaoSementesManager.acessaModulo(); }},
+        {"acessaModuloRelatoriosPlantio", [&]() { relatorioPlantioManager.acessaModulo(); }}
+    };
 
-    monitorManager.solicitaStatus();
+    std::string comando;
+    while (true) {
+        std::cout << "\nDigite um comando (ou 'sair' para encerrar): ";
+        std::getline(std::cin, comando);
 
-    monitorManager.registraObservacao("Observação de teste");
+        if (comando == "sair") {
+            break;
+        }
 
-    monitorManager.retornaPainelMonitoramento();
+        if (comandos.find(comando) != comandos.end()) {
+            comandos[comando]();
+        } else {
+            std::cout << "Comando inválido! Tente novamente." << std::endl;
+        }
+    }
 
-    categoriaAduboManager.acessaModulo();
-
-    nivelSementesManager.acessaModulo();
-
-    solicitacaoReabastecimentoManager.registraSolicitacaoReabastecimento("Máquina 1");
-
-    vazaoSementesManager.acessaModulo();
-
-    std::cout << "Todas as operações foram testadas com sucesso!" << std::endl;
-
+    std::cout << "Programa encerrado." << std::endl;
     return 0;
 }
